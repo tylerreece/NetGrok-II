@@ -8,11 +8,12 @@ from flask_socketio import SocketIO
 import threading
 from flask import Flask, render_template
 import zmq
+import json
 
 # Setup ZMQ and Flask
 context = zmq.Context()
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'teamNetGrok'
+app.config['SECRET_KEY'] = 'TeamNetGrok'
 
 # Utilize threading mode to allow utilization of .recv() blocking call
 sio = SocketIO(app, async_mode='threading')
@@ -22,6 +23,11 @@ HOST_MASK = '0.0.0.0'
 APP_PORT = 5000
 ZMQ_SUBSCRIPTION_PORT = '7188'
 
+# Bookkeeping for connections
+primary_connections_seen = set()
+
+# Debug flag
+debug = True
 
 # Server routing logic
 
@@ -29,6 +35,43 @@ ZMQ_SUBSCRIPTION_PORT = '7188'
 def index():
 	"""Returns NetGrok's index page."""
 	return render_template('index.html')
+
+def parse_json(json_string):
+	"""
+	Parses JSON and outputs message to be broadcasted.
+
+	Parameters
+	----------
+	json_string: str
+		A string in JSON format sent from SSLSplit.
+
+	Returns
+	----------
+	message: str
+		A string of the necessary information for the 
+		visualization. Add fields here as necessary.
+	"""
+	
+	# Clean up json_string
+	json_string = json_string.strip('{').strip('}').strip('\x00').strip('}')
+	
+	# Format json_string correctly for json.loads()
+	json_string = '[{' + json_string + '}]'
+	json_obj = json.loads(json_string)
+	
+	# Primary connections
+	if 'host' in json_obj[0]:
+		message = json_obj[0]['host']
+		message = message.split('www.')[-1]
+		if message not in primary_connections_seen:
+			primary_connections_seen.add(message)
+			return message
+
+	# Secondary connections
+	else:
+		# TODO: add in secondary connection handling
+		pass
+			
 
 def listen():
 	"""
@@ -40,8 +83,14 @@ def listen():
 	subscriber.connect('tcp://127.0.0.1:' + ZMQ_SUBSCRIPTION_PORT)
 	subscriber.setsockopt(zmq.SUBSCRIBE, b'')
 	while True:
-		message = subscriber.recv() 
-		sio.emit('updates', message.decode("utf-8"), broadcast=True)
+		received_message = subscriber.recv().decode("utf-8")
+
+		if(debug):
+			sio.emit('debug', received_message, broadcast=True)
+
+		message_to_emit = parse_json(received_message)
+		if type(message_to_emit) is str:
+			sio.emit('new node', message_to_emit, broadcast=True)
 
 
 # Setup and start thread

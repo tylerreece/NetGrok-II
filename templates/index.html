@@ -6,16 +6,24 @@
 
 <p>NetGrok</p>
 
+<div id='stream'>
+
+</div>
 
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
 <script type="text/javascript" charset="utf-8">
     var socket = io.connect('http://' + document.domain + ':' + location.port);
 
     socket.on('connect', function() {
-        console.log("woohoo!")
+        console.log("Client connected successfully!")
     });
 
-    socket.on('updates', function(msg) {
+    socket.on('new node', function(msg) {
+	var div = document.getElementById('stream');
+	div.innerHTML += '<p>' + msg + '</p>';
+    });
+    
+    socket.on('debug', function(msg) {
 	console.log(msg);
     });
 
