@@ -2,32 +2,23 @@
 
 <html>
 
+<head>
+
+<title>NetGrok - Visualize Your Network</title>
+<script type="text/javascript" src="{{ url_for('static', filename='vis.js') }}"></script>
+<link href="{{ url_for('static', filename='styles/vis-network.min.css') }}" rel="stylesheet" type="text/css"/>
+
+</head>
+
 <body>
 
-<p>NetGrok</p>
+<h1>NetGrok</h1>
 
-<div id='stream'>
-
-</div>
+<div id='stream'></div>
+<div id='visualization'></div>
 
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
-<script type="text/javascript" charset="utf-8">
-    var socket = io.connect('http://' + document.domain + ':' + location.port);
-
-    socket.on('connect', function() {
-        console.log("Client connected successfully!")
-    });
-
-    socket.on('new node', function(msg) {
-	var div = document.getElementById('stream');
-	div.innerHTML += '<p>' + msg + '</p>';
-    });
-    
-    socket.on('debug', function(msg) {
-	console.log(msg);
-    });
-
-</script>
+<script type="text/javascript" charset="utf-8" src="{{url_for('static', filename='network.js')}}"></script>
 
 
 </body>

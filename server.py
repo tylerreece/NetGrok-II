@@ -15,6 +15,10 @@ context = zmq.Context()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'TeamNetGrok'
 
+# Do not cache static assets. Annoying during development
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 
+
+
 # Utilize threading mode to allow utilization of .recv() blocking call
 sio = SocketIO(app, async_mode='threading')
 
