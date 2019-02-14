@@ -42,7 +42,7 @@ socket.on('connect', function() {
 
 /* Handle creation of new node */
 socket.on('new node', function(msg) {
-       	nodes.add({label: msg});
+       	nodes.add({label: msg, image: 'https://' + msg + '/favicon.ico', shape: 'image'});
 	network.fit();
 	var div = document.getElementById('stream');
        	div.innerHTML += '<p>' + msg + '</p>';
