@@ -1,5 +1,5 @@
 <!--
-index.html
+table.html
 XE401/XE401 - NetGrok II
 Tyler Reece, Dan Young, Matt Kim, Josh Balba
 United States Military Academy
@@ -21,18 +21,18 @@ United States Military Academy
 	<!-- NAVBAR -->
 	<div class="navbar">
   		<h2>NetGrok | Visualize Your Network!</h2>
-		<a class="active" href="index.html">Network View</a>
+		<a href="index.html">Network View</a>
   		<a href="timeline.html">Timeline View</a>
-  		<a href="table.html">Table View</a>
+  		<a class="active" href="table.html">Table View</a>
   		<a href="about.html">About</a>
 	</div>
 
-	<!-- NETWORK DIV -->
-	<div id='visualization'></div>
+	<!-- TABLE DIV -->
+	<div id='table'></div>
 	
-	<!-- NETWORK JAVASCRIPT -->
+	<!-- TABLE JAVASCRIPT -->
 	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
-	<script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/network.js') }}"></script>
+	<script type="text/javascript" charset="utf-8" src="{{ url_for('static', filename='js/table.js') }}"></script>
 
 
 </body>

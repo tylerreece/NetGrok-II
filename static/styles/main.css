@@ -1,0 +1,50 @@
+
+/* NAVIGATION BAR */
+
+/* Place the navbar at the bottom of the page, and make it stick */
+.navbar {
+	text-align:center;
+ 	background-color: white;
+  	overflow: hidden;
+  	position: fixed;
+  	bottom: 0;
+  	width: 100%;
+  	display: block;
+	padding-bottom: 15px;
+	border: 2px solid black;
+}
+
+/* Style the links inside the navigation bar */
+.navbar a {
+  float: center;
+  display: inline-block;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 5px 16px;
+  text-decoration: none;
+  font-size: 17px;
+  background-color: #4CAF50;
+}
+
+/* Change the color of links on hover */
+.navbar a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+/* Add a color to the active/current link */
+.navbar a.active {
+  background-color: #1569C7;
+  color: white;
+}
+
+/* NETWORK */
+
+#visualization {
+	position:relative;
+	width: 100%;
+	height: 500px;
+	top:0px;
+	bottom:0px;
+	border: 2px solid black;
+}

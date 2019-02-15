@@ -40,6 +40,26 @@ def index():
 	"""Returns NetGrok's index page."""
 	return render_template('index.html')
 
+@app.route('/index.html')
+def index2():
+	"""Returns NetGrok's index page (secondary route)."""
+	return render_template('index.html')
+
+@app.route('/timeline.html')
+def timeline():
+	"""Returns NetGrok's timeline page."""
+	return render_template('timeline.html')
+
+@app.route('/table.html')
+def table():
+	"""Returns NetGrok's table page."""
+	return render_template('table.html')
+
+@app.route('/about.html')
+def about():
+	"""Returns NetGrok's about page."""
+	return render_template('about.html')
+
 def parse_json(json_string):
 	"""
 	Parses JSON and outputs message to be broadcasted.
