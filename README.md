@@ -74,7 +74,7 @@ openssl req -new -x509 -days 1826 -key netgrok.key -out netgrok.crt
 
  #### c. Configure NAT to redirect packets to ports that SSLsplit listens to:
 
-  sudo iptables -t nat -A PREROUTING -p tcp --dport   80 -j REDIRECT --to-ports 8080
+  sudo iptables -t nat -A PREROUTING -p tcp --dport   80 -j REDIRECT --to-ports 8080 \n
   sudo iptables -t nat -A PREROUTING -p tcp --dport  443 -j REDIRECT --to-ports 8443
   sudo iptables -t nat -A PREROUTING -p tcp --dport  465 -j REDIRECT --to-ports 8443
   sudo iptables -t nat -A PREROUTING -p tcp --dport  587 -j REDIRECT --to-ports 8443
