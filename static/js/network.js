@@ -19,6 +19,9 @@ var data = {
 var options = {
 	nodes: {
 		brokenImage: "https://i.dlpng.com/static/png/6818_preview.png",
+		font: {
+			multi: 'html',
+		},
 	},
 	interaction: {
 		hover: true,
@@ -41,6 +44,11 @@ var options = {
 var network = new vis.Network(container, data, options);
 
 
+/* Add initial informational node on empty network */
+if(!nodes.length) {
+	nodes.add({id: 0, label: "<b>Browse around to start Grokking!</b>"})
+};
+
 	
 /* Connect to socket */
 var socket = io.connect('http://' + document.domain + ':' + location.port);
@@ -54,7 +62,7 @@ socket.on('connect', function() {
 
 /* Handle creation of new node */
 socket.on('new node', function(msg) {
-       	nodes.add({label: msg, image: 'https://' + msg + '/favicon.ico', shape: 'image'});
+       	nodes.add({label: '<b>' + msg + '</b>', image: 'https://' + msg + '/favicon.ico', shape: 'image'});
 	network.fit();
 });
 
