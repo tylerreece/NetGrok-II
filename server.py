@@ -18,7 +18,6 @@ app.config['SECRET_KEY'] = 'TeamNetGrok'
 # Do not cache static assets. Annoying during development
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 
 
-
 # Utilize threading mode to allow utilization of .recv() blocking call
 sio = SocketIO(app, async_mode='threading')
 
@@ -113,6 +112,7 @@ def listen():
 			sio.emit('debug', received_message, broadcast=True)
 
 		message_to_emit = parse_json(received_message)
+		# The only reason this type check is here is because the else statement is not yet filled out in parse_json to handle secondary connections
 		if type(message_to_emit) is str:
 			sio.emit('new node', message_to_emit, broadcast=True)
 
