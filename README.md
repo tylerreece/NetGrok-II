@@ -53,13 +53,13 @@ certificates directory:
 openssl genrsa -out netgrok.key 4096
 openssl req -new -x509 -days 1826 -key netgrok.key -out netgrok.crt
 
-  Country:             US
-  State:               New York
-  City:                West Point
-  Organization:        NetGrok CA
-  Organizational Unit: NetGrok II
-  Common Name:         NetGrok
-  Email Address:
+  Country:             US \
+  State:               New York \
+  City:                West Point \
+  Organization:        NetGrok CA \
+  Organizational Unit: NetGrok II \
+  Common Name:         NetGrok \
+  Email Address: \
 
 
 ### 2. Configure the Ubuntu machine acting as the router:
