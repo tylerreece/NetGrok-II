@@ -59,7 +59,7 @@ openssl req -new -x509 -days 1826 -key netgrok.key -out netgrok.crt
   Organization:        NetGrok CA \
   Organizational Unit: NetGrok II \
   Common Name:         NetGrok \
-  Email Address: \
+  Email Address: 
 
 
 ### 2. Configure the Ubuntu machine acting as the router:
@@ -79,16 +79,15 @@ openssl req -new -x509 -days 1826 -key netgrok.key -out netgrok.crt
   sudo iptables -t nat -A PREROUTING -p tcp --dport  465 -j REDIRECT --to-ports 8443 \
   sudo iptables -t nat -A PREROUTING -p tcp --dport  587 -j REDIRECT --to-ports 8443 \
   sudo iptables -t nat -A PREROUTING -p tcp --dport  993 -j REDIRECT --to-ports 8443 \
-  sudo iptables -t nat -A PREROUTING -p tcp --dport 5222 -j REDIRECT --to-ports 8080 \
+  sudo iptables -t nat -A PREROUTING -p tcp --dport 5222 -j REDIRECT --to-ports 8080 
 
   These rules redirect HTTP, HTTPS, SMTP, IMAP, and WhatsApp packets.
 
 
-### 3. Run SSLsplit-NetGrok from the sslsplit/ directory on the Ubuntu
-machine acting as the router:
+### 3. Run SSLsplit-NetGrok from the sslsplit/ directory on the Ubuntu machine acting as the router:
 
  ####  a. To see the JSON dumps, uncomment the print statement in netgrok().
- ####  b.
+ ####  b. Compile SSLSplit
 
     make clean
     make
@@ -99,8 +98,7 @@ machine acting as the router:
 
  #### a. Copy the netgrok.crt onto the client machine
 
-  #### b. Open up Firefox and go to Preferences > Privacy & Security >
-  View Certificates > Authorities > Import, and then select the netgrok.crt
+  #### b. Open up Firefox and go to Preferences > Privacy & Security > View Certificates > Authorities > Import, and then select the netgrok.crt
 
 
 ### 5. Configure the client's default gateway:
