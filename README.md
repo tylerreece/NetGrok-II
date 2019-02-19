@@ -37,7 +37,7 @@ this example, both the client and router were 64-bit Ubuntu Linux machines.
 
  #### a. Clone the GitHub repository:
 
-  git clone https://github.com/ghost-in-the-bash/sslsplit-netgrok
+  git clone https://github.com/tylerreece/NetGrok-II
 
  #### b. Next, install libevent and libssl so sslsplit can handle large numbers of
   ssl connections simultaneously:
@@ -48,7 +48,7 @@ this example, both the client and router were 64-bit Ubuntu Linux machines.
 ### 1. Generate a Certificate Authority key and certificate. Eventually, this step
 might be automated on the OpenWRT router to generate a NetGrok CA key and
 certificate if they are not present. Generate a key and certificate in the
-sslsplit-netgrok/openwrt-files/netgrok/ directory:
+certificates directory:
 
 openssl genrsa -out netgrok.key 4096
 openssl req -new -x509 -days 1826 -key netgrok.key -out netgrok.crt
@@ -74,17 +74,17 @@ openssl req -new -x509 -days 1826 -key netgrok.key -out netgrok.crt
 
  #### c. Configure NAT to redirect packets to ports that SSLsplit listens to:
 
-  sudo iptables -t nat -A PREROUTING -p tcp --dport   80 -j REDIRECT --to-ports 8080 \n
-  sudo iptables -t nat -A PREROUTING -p tcp --dport  443 -j REDIRECT --to-ports 8443
-  sudo iptables -t nat -A PREROUTING -p tcp --dport  465 -j REDIRECT --to-ports 8443
-  sudo iptables -t nat -A PREROUTING -p tcp --dport  587 -j REDIRECT --to-ports 8443
-  sudo iptables -t nat -A PREROUTING -p tcp --dport  993 -j REDIRECT --to-ports 8443
-  sudo iptables -t nat -A PREROUTING -p tcp --dport 5222 -j REDIRECT --to-ports 8080
+  sudo iptables -t nat -A PREROUTING -p tcp --dport   80 -j REDIRECT --to-ports 8080 \
+  sudo iptables -t nat -A PREROUTING -p tcp --dport  443 -j REDIRECT --to-ports 8443 \
+  sudo iptables -t nat -A PREROUTING -p tcp --dport  465 -j REDIRECT --to-ports 8443 \
+  sudo iptables -t nat -A PREROUTING -p tcp --dport  587 -j REDIRECT --to-ports 8443 \
+  sudo iptables -t nat -A PREROUTING -p tcp --dport  993 -j REDIRECT --to-ports 8443 \
+  sudo iptables -t nat -A PREROUTING -p tcp --dport 5222 -j REDIRECT --to-ports 8080 \
 
   These rules redirect HTTP, HTTPS, SMTP, IMAP, and WhatsApp packets.
 
 
-### 3. Run SSLsplit-NetGrok from the sslsplit-netgrok/ directory on the Ubuntu
+### 3. Run SSLsplit-NetGrok from the sslsplit/ directory on the Ubuntu
 machine acting as the router:
 
  ####  a. To see the JSON dumps, uncomment the print statement in netgrok().
@@ -92,7 +92,7 @@ machine acting as the router:
 
     make clean
     make
-    src/sslsplit -k openwrt-files/netgrok/netgrok.key -c openwrt-files/netgrok/netgrok.crt ssl 0.0.0.0 8443 tcp 0.0.0.0 8080
+    ./sslsplit -k ../netgrok.key -c ../netgrok.crt ssl 0.0.0.0 8443 tcp 0.0.0.0 8080
 
 
 ### 4. Configure the client's web browser (if the CA cert is not already installed):
@@ -105,10 +105,10 @@ machine acting as the router:
 
 ### 5. Configure the client's default gateway:
 
-####  a. Add a new default gateway. It is critical that you do this before deleting
-  the original default gateway if you are using the client through SSH, or else
-  you will disconnect. Use the IP address of the Ubuntu machine acting
-  as the router:
+####  a. Add a new default gateway. 
+  It is critical that you do this before deleting the original default 
+  gateway if you are using the client through SSH, or else you will disconnect. 
+  Use the IP address of the Ubuntu machine acting as the router:
 
   sudo route add default gw <router_ip_address>
 
@@ -116,10 +116,21 @@ machine acting as the router:
 
   sudo route del default gw <original_gw_ip_address>
 
-
 Now you should be able to open up Firefox and go to any website. Click on the
 secure HTTPS lock icon in the URL bar to display the certificate. It should be
 verified by the NetGrok CA.
+
+### 6. Run the server.
+
+   In the main directory:  
+   
+   python3 server.py
+   
+   This will run the server hosted on netgrok.eecs.net on port 5000.
+   
+### 7. Navigate to visualization page.
+
+   While connected to EECSNet, visit netgrok.eecs.net:5000 to see the main network visualization page.
 
 ## Authors
 
