@@ -48,3 +48,22 @@
 	bottom:0px;
 	border: 2px solid black;
 }
+
+table {
+	border: 1px solid black;
+	border-collapse: collapse;
+	table-layout: fixed;
+	width: 100%;
+}
+
+th {
+	width: 100px;
+	text-align: center;
+	border: 1px solid black;
+}
+
+td {
+	width: 100px;
+	text-align: center;
+	border: 1px solid black;
+}

@@ -61,8 +61,15 @@ socket.on('connect', function() {
 });
 
 /* Handle creation of new node */
-socket.on('new node', function(msg) {
-       	nodes.add({label: '<b>' + msg + '</b>', image: 'https://' + msg + '/favicon.ico', shape: 'image'});
+socket.on('new node', function(msg) { 	
+	
+	/* Remove intro message on browsing start */
+	if(nodes.get(0)){
+		nodes.remove(0)
+	};
+	
+	var json_obj = JSON.parse(msg);
+       	nodes.add({label: '<b>' + json_obj.host + '</b>', image: 'https://' + json_obj.host + '/favicon.ico', shape: 'image'});
 	network.fit();
 });
 

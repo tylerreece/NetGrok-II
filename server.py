@@ -84,11 +84,11 @@ def parse_json(json_string):
 	
 	# Primary connections
 	if 'host' in json_obj[0]:
-		message = json_obj[0]['host']
-		message = message.split('www.')[-1]
-		if message not in primary_connections_seen:
-			primary_connections_seen.add(message)
-			return message
+		host = json_obj[0]['host']
+		host = host.split('www.')[-1]
+		if host not in primary_connections_seen:
+			primary_connections_seen.add(host)
+			return json.dumps(json_obj[0])
 
 	# Secondary connections
 	else:
