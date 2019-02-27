@@ -2,6 +2,7 @@ SSLSPLITNETGROK=https://github.com/Ghost-in-the-Bash/sslsplit-netgrok.git
 NETGROKII=https://github.com/tylerreece/NetGrok-II.git
 
 ubuntu: certs ubunturouter
+	git clone $(SSLSPLITNETGROK)
 	cd sslsplit; make clean
 	cd sslpslit; make
 	cd sslsplit; ./sslsplit -k ../certificates/netgrok.key -c ../certificates/netgrok.crt ssl 0.0.0.0 8443 tcp 0.0.0.0 8080

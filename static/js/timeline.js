@@ -43,3 +43,36 @@ var options = {};
 
   
 var timeline = new vis.Timeline(container, items, options);
+
+var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+/* On connect message to console */
+socket.on('connect', function() {
+        console.log("Client connected successfully!");
+        console.log(navigator.userAgent);
+        socket.emit('client connected', {userAgent: navigator.userAgent});
+});
+
+/* Handle creation of new node */
+socket.on('new item', function(msg) {
+
+        var json_obj = JSON.parse(msg);
+	var url = json_obj.host;
+        var cont = document.createElement('div');
+	cont.appendChild(document.createTextNode(url));
+	cont.appendChild(document.createElement('br'));
+	var favicon = document.createElement('img');
+	favicon.src = 'https://' + url + '/favicon.ico';
+	favicon.style.width = '35px';
+	favicon.style.height='35px';
+	cont.appendChild(favicon);
+	var request = {content: cont, fromCache: deets.fromCache, ip: deets.ip, start: time};//, image: 'https://' + url + '/favicon.ico', shape:'image'};
+	console.log(request.start);
+	items.add(request);
+	items.add({label: '<b>' + json_obj.host + '</b>', image: 'https://' + json_obj.host + '/favicon.ico', shape: 'image'});
+});
+
+/* Print information to console for debuging */
+socket.on('debug', function(msg) {
+        console.log(msg);
+});
