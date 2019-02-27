@@ -34,7 +34,7 @@ mutex = Lock()
 primary_connections_seen = set()
 
 # Debug flag
-debug = True
+debug = False
 
 # Server routing logic
 
@@ -90,6 +90,7 @@ def parse_json(json_string):
 	if 'host' in json_obj[0]:
 		host = json_obj[0]['host']
 		host = host.split('www.')[-1]
+		global primary_connections_seen
 		if host not in primary_connections_seen:
 			primary_connections_seen.add(host)
 			return json_obj[0]
@@ -104,8 +105,22 @@ def send_whole_graph(userAgent):
 	with mutex:
 		conn = create_connection(DATABASE)
 		info = query_database(conn)
-		print(info)
-	print('client connected ' + str(userAgent))
+		msg = '['
+		for row in info:
+			entry = dict()
+			entry['src_ip'] = row[1]
+			entry['src_port'] = row[2]
+			entry['dst_ip'] = row[3]
+			entry['dst_port'] = row[4]
+			entry['time_start'] = row[5]
+			entry['time_end'] = row[6]
+			entry['download'] = row[7]
+			entry['upload'] = row[8]
+			entry['protocol'] = row[9]
+			entry['host'] = row[10] 
+			msg += str(entry)
+		msg += ']'
+		sio.emit('whole graph', msg)
 
 def create_connection(db_file):
 	try:
@@ -144,7 +159,7 @@ def listen():
 
 		json_obj = parse_json(received_message)
 		msg = json.dumps(json_obj)
-
+		
 		# The only reason this type check is here is because the else statement is not yet filled out in parse_json to handle secondary connections
 		if type(msg) is str and json_obj is not None:
 			
@@ -163,11 +178,12 @@ def listen():
 						json_obj['protocol'], 
 						json_obj['host'])
 					create_entry(conn, entry)
-					sio.emit('new node', msg, broadcast=True)
+
+			sio.emit('new node', msg, broadcast=True)
 
 
 # Setup and start thread
-thread = Process(target=listen)
+thread = threading.Thread(target=listen)
 thread.start()
 
 # Run server with debug mode enabled

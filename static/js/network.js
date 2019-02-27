@@ -60,9 +60,13 @@ socket.on('connect', function() {
 	socket.emit('send whole graph', {userAgent: navigator.userAgent});
 });
 
+socket.on('whole graph', function (msg) {
+	console.log(msg);
+});
+
 /* Handle creation of new node */
 socket.on('new node', function(msg) { 	
-	
+	console.log(msg);	
 	/* Remove intro message on browsing start */
 	if(nodes.get(0)){
 		nodes.remove(0)
