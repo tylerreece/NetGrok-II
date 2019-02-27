@@ -9,6 +9,8 @@ import threading
 from flask import Flask, render_template
 import zmq
 import json
+import sqlite3
+from multiprocessing import Process, Lock
 
 # Setup ZMQ and Flask
 context = zmq.Context()
@@ -25,6 +27,8 @@ sio = SocketIO(app, async_mode='threading')
 HOST_MASK = '0.0.0.0'
 APP_PORT = 5000
 ZMQ_SUBSCRIPTION_PORT = '7188'
+DATABASE = 'database/netgrok.db'
+mutex = Lock()
 
 # Bookkeeping for connections
 primary_connections_seen = set()
@@ -88,13 +92,40 @@ def parse_json(json_string):
 		host = host.split('www.')[-1]
 		if host not in primary_connections_seen:
 			primary_connections_seen.add(host)
-			return json.dumps(json_obj[0])
+			return json_obj[0]
 
 	# Secondary connections
 	else:
 		# TODO: add in secondary connection handling
 		pass
 			
+@sio.on('send whole graph')
+def send_whole_graph(userAgent):
+	with mutex:
+		conn = create_connection(DATABASE)
+		info = query_database(conn)
+		print(info)
+	print('client connected ' + str(userAgent))
+
+def create_connection(db_file):
+	try:
+		conn = sqlite3.connect(db_file)
+		return conn
+	except Error as e:
+		print(e)
+	return None
+
+def create_entry(conn, entry):
+	sql = ''' INSERT INTO NETGROK(ID, SRC_IP, SRC_PORT, DST_IP, DST_PORT, TIME_START, TIME_END, DOWNLOAD, UPLOAD, PROTOCOL, HOST) VALUES(?,?,?,?,?,?,?,?,?,?,?)'''
+	cur = conn.cursor()
+	cur.execute(sql, entry)
+	return cur.lastrowid
+
+def query_database(conn):
+	sql = ''' SELECT * FROM NETGROK'''
+	cur = conn.cursor()
+	cur.execute(sql)
+	return cur.fetchall()
 
 def listen():
 	"""
@@ -111,14 +142,32 @@ def listen():
 		if(debug):
 			sio.emit('debug', received_message, broadcast=True)
 
-		message_to_emit = parse_json(received_message)
+		json_obj = parse_json(received_message)
+		msg = json.dumps(json_obj)
+
 		# The only reason this type check is here is because the else statement is not yet filled out in parse_json to handle secondary connections
-		if type(message_to_emit) is str:
-			sio.emit('new node', message_to_emit, broadcast=True)
+		if type(msg) is str and json_obj is not None:
+			
+			with mutex: # Lock during modications to db
+				conn = create_connection(DATABASE)
+				with conn:
+					entry = (None,
+						json_obj['src_ip'], 
+						json_obj['src_port'], 
+						json_obj['dst_ip'], 
+						json_obj['dst_port'], 
+						json_obj['time_start'], 
+						json_obj['time_end'], 
+						json_obj['download'], 
+						json_obj['upload'], 
+						json_obj['protocol'], 
+						json_obj['host'])
+					create_entry(conn, entry)
+					sio.emit('new node', msg, broadcast=True)
 
 
 # Setup and start thread
-thread = threading.Thread(target=listen)
+thread = Process(target=listen)
 thread.start()
 
 # Run server with debug mode enabled

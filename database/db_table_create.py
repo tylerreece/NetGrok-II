@@ -6,7 +6,7 @@ conn = sqlite3.connect('netgrok.db')
 print "Opened database successfully";
 
 conn.execute('''CREATE TABLE NETGROK
-         (ID INT PRIMARY KEY    NOT NULL,
+         (ID INTEGER PRIMARY KEY AUTOINCREMENT,
 	 SRC_IP     TEXT	NOT NULL,
 	 SRC_PORT   TEXT        NOT NULL,
 	 DST_IP     TEXT        NOT NULL,
