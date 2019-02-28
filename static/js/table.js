@@ -1,3 +1,5 @@
+var rowsSeen = new Set();
+
 /* Create table header */
 var header = "<table><tr>" +
     "<th>Host</th>" +
@@ -17,19 +19,22 @@ document.getElementById('table').innerHTML = header;
 /* Table Functions */
 function addRow(json_string) {
     var json_obj = JSON.parse(json_string);
-    var newRow = "<table><tr>" +
-        "<td>" + json_obj.host + "</td>" +
-        "<td>" + json_obj.protocol + "</td>" +
-        "<td>" + json_obj.src_ip + "</td>" +
-        "<td>" + json_obj.src_port + "</td>" +
-        "<td>" + json_obj.dst_ip + "</td>" +
-        "<td>" + json_obj.dst_port + "</td>" +
-        "<td>" + json_obj.time_start + "</td>" +
-        "<td>" + json_obj.time_end + "</td>" +
-        "<td>" + json_obj.download + "</td>" +
-        "<td>" + json_obj.upload + "</td>" +
-        "</tr></table>";
-    document.getElementById('table').innerHTML += newRow;
+    if(!rowsSeen.has(json_obj.host)) {
+		rowsSeen.add(json_obj.host);	
+		var newRow = "<table><tr>" +
+        	"<td>" + json_obj.host + "</td>" +
+        	"<td>" + json_obj.protocol + "</td>" +
+        	"<td>" + json_obj.src_ip + "</td>" +
+        	"<td>" + json_obj.src_port + "</td>" +
+        	"<td>" + json_obj.dst_ip + "</td>" +
+        	"<td>" + json_obj.dst_port + "</td>" +
+        	"<td>" + json_obj.time_start + "</td>" +
+        	"<td>" + json_obj.time_end + "</td>" +
+        	"<td>" + json_obj.download + "</td>" +
+        	"<td>" + json_obj.upload + "</td>" +
+        	"</tr></table>";
+    	document.getElementById('table').innerHTML += newRow;
+	}
 }
 
 function addRows(json_strings) {

@@ -1,7 +1,32 @@
+String.prototype.hashCode = function() {
+	var hash = 0, i, chr;
+	if (this.length === 0) return hash;
+	for (i = 0; i < this.length; i++) {
+		chr   = this.charCodeAt(i);
+		hash  = ((hash << 5) - hash) + chr;
+		hash |= 0; // Convert to 32bit integer
+	}
+	return hash;
+};
+
+function getCoordinates(host) {
+	var a = host.hashCode();
+	var b = Math.abs(a) % 1000000;
+	var x = (b / 100000) * 100;
+	var y = (((b / 10000) >> 0)% 10)*100;
+	var x1 = ((b % 10000) / 1000) * 10;
+	var y1 = ((b % 1000) / 100)*10;
+	var x2 = (b % 100) / 10;
+	var y2 = (b % 10);
+	x = Math.floor(x + x1 + x2);
+	y = Math.floor(y + y1 + y2);
+	return [x,y];
+}
+
 var nodesSeen = new Set();
 
 /* VisJS setup */
-var nodes = new vis.DataSet();
+var nodes = new vis.DataSet([]);
 var edges = new vis.DataSet();
 
 var container = document.getElementById('visualization');
@@ -24,11 +49,11 @@ var options = {
 	},
     physics: {
         enabled: true,
-        stabilization: false,
+        stabilization: true,
         barnesHut: {
-            gravitationalConstant: -2000,
-            centralGravity: 0.3,
-            avoidOverlap: 0.5,
+            gravitationalConstant: -1000,
+            centralGravity: 0,
+            avoidOverlap: 0.25,
 
         },
     },
@@ -39,12 +64,18 @@ var options = {
 
 var network = new vis.Network(container, data, options);
 
+network.moveTo({
+	position: {x: 500, y:500},
+	offset: {x: 500, y:  500},
+});
 
 /* Network Functions */
 function addNode(json_string) {
     var json_obj = JSON.parse(json_string);
 	if(!nodesSeen.has(json_obj.host)) {
     	nodesSeen.add(json_obj.host);
+		var x = getCoordinates(json_obj.host)[0];
+		var y = getCoordinates(json_obj.host)[1];
 		nodes.add({
         	label: '<b>' + json_obj.host + '</b>',
 			src_ip: json_obj.src_ip,
@@ -57,7 +88,9 @@ function addNode(json_string) {
 			upload: json_obj.upload,
 			protocol: json_obj.protocol,
         	image: 'https://' + json_obj.host + '/favicon.ico',
-        	shape: 'image'
+        	shape: 'image',
+			x: x,
+			y: y,
     	});
 	}
     network.fit();
@@ -109,4 +142,8 @@ network.on('hoverNode', function(properties) {
 network.on('blurNode', function(properties) {
 	var hoveredNodes = nodes.get(properties.node);
 	document.getElementById('info').innerHTML = '';
+});
+
+network.on('stabilized', function(properties) {
+	network.fit();
 });

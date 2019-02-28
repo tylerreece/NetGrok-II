@@ -6,8 +6,9 @@
 	left: 0;
 	height: 25%;
 	display: block;
-	padding-bottom: 15px;
+	padding-bottom: 0px;
 	border: 2px solid black;
+	min-height: 190px;
 }
 
 .navbar a {
