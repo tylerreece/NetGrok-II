@@ -4,9 +4,9 @@ from subprocess import call
 call(["rm", "netgrok.db"])
 
 #call db create
-call(["python", "db_create.py"])
+call(["python", "create.py"])
 
 # call db table create
-call(["python", "db_table_create.py"])
+call(["python", "table_create.py"])
 
 

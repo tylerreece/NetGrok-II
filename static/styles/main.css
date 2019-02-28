@@ -1,58 +1,47 @@
-
-/* NAVIGATION BAR */
-
-/* Place the navbar at the side of the page, and make it stick */
 .navbar {
 	text-align:center;
- 	background-color: white;
-  	overflow: hidden;
-  	position: fixed;
-	/*bottom: 0;*/
-  	top: 0;
+	background-color: white;
+	overflow: hidden;
+	position: fixed;
+	top: 0;
 	left: 0;
-  	width: 0%;
+	width: 0%;
 	height: 25%;
 	overflow-x: hidden;
 	transition: 0.5s;
-  	display: block;
+	display: block;
 	padding-bottom: 15px;
 	border: 2px solid black;
 }
 
-/* Style the links inside the navigation bar */
 .navbar a {
-  float: center;
-  display: block;
-  color: #f2f2f2;
-  text-align: center;
-  padding: 5px 5px 5px 25px;
-  text-decoration: none;
-  font-size: 17px;
-  background-color: #4CAF50;
-  transition: 0.3s;
+	float: center;
+	display: block;
+	color: #f2f2f2;
+	text-align: center;
+	padding: 5px 5px 5px 25px;
+	text-decoration: none;
+	font-size: 17px;
+	background-color: #4CAF50;
+	transition: 0.3s;
 }
 
-/* Change the color of links on hover */
 .navbar a:hover {
-  background-color: #ddd;
-  color: black;
+	background-color: #ddd;
+	color: black;
 }
 
 .navbar .closebtn {
-  position: absolute;
-  top: 0;
-  right: 25px;
-  font-size: 36px;
-  margin-left: 50px;
+	position: absolute;
+	top: 0;
+	right: 25px;
+	font-size: 36px;
+	margin-left: 50px;
 }
-
-/* Add a color to the active/current link */
 .navbar a.active {
-  background-color: #1569C7;
-  color: white;
+	background-color: #1569C7;
+	color: white;
 }
-
-/* NETWORK */
 
 #visualization {
 	position:relative;
