@@ -80,8 +80,8 @@ def parse_json(json_string):
 	"""
 	
 	# Clean up json_string
-	json_string = json_string.strip('{').strip('}').strip('\x00').strip('}')
-	
+	json_string = json_string.strip('{}\x00')
+		
 	# Format json_string correctly for json.loads()
 	json_string = '[{' + json_string + '}]'
 	json_obj = json.loads(json_string)
@@ -93,6 +93,7 @@ def parse_json(json_string):
 		global primary_connections_seen
 		if host not in primary_connections_seen:
 			primary_connections_seen.add(host)
+			print(str(primary_connections_seen))
 			return json_obj[0]
 
 	# Secondary connections
@@ -105,7 +106,7 @@ def send_whole_graph(userAgent):
 	with mutex:
 		conn = create_connection(DATABASE)
 		info = query_database(conn)
-		msg = '['
+		msg = ''
 		for row in info:
 			entry = dict()
 			entry['src_ip'] = row[1]
@@ -119,7 +120,6 @@ def send_whole_graph(userAgent):
 			entry['protocol'] = row[9]
 			entry['host'] = row[10] 
 			msg += str(entry)
-		msg += ']'
 		sio.emit('whole graph', msg)
 
 def create_connection(db_file):
@@ -141,6 +141,14 @@ def query_database(conn):
 	cur = conn.cursor()
 	cur.execute(sql)
 	return cur.fetchall()
+
+def remove_duplicates(conn):
+	sql = '''DELETE FROM NETGROK 
+		WHERE ID NOT IN (SELECT MAX(ID) FROM NETGROK
+				GROUP BY host); '''
+	cur = conn.cursor()
+	cur.execute(sql)
+	
 
 def listen():
 	"""
@@ -178,8 +186,8 @@ def listen():
 						json_obj['protocol'], 
 						json_obj['host'])
 					create_entry(conn, entry)
-
-			sio.emit('new node', msg, broadcast=True)
+					remove_duplicates(conn)			
+					sio.emit('new node', msg, broadcast=True)
 
 
 # Setup and start thread
