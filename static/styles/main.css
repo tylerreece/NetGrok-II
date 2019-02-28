@@ -1,14 +1,10 @@
 .navbar {
 	text-align:center;
 	background-color: white;
-	overflow: hidden;
 	position: fixed;
-	top: 0;
+	bottom: 0;
 	left: 0;
-	width: 0%;
 	height: 25%;
-	overflow-x: hidden;
-	transition: 0.5s;
 	display: block;
 	padding-bottom: 15px;
 	border: 2px solid black;
@@ -23,7 +19,6 @@
 	text-decoration: none;
 	font-size: 17px;
 	background-color: #4CAF50;
-	transition: 0.3s;
 }
 
 .navbar a:hover {
@@ -31,13 +26,6 @@
 	color: black;
 }
 
-.navbar .closebtn {
-	position: absolute;
-	top: 0;
-	right: 25px;
-	font-size: 36px;
-	margin-left: 50px;
-}
 .navbar a.active {
 	background-color: #1569C7;
 	color: white;
