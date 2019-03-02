@@ -2,7 +2,12 @@ var itemsSeen = new Set();
 
 var container = document.getElementById('timeline');
 
-var options = {};
+var options = {
+	zoomMin: 1,
+	horizontalScroll: true,
+	orientation: 'top',
+	zoomKey: 'ctrlKey',
+};
 
 var items = new vis.DataSet([{
     id: 0,

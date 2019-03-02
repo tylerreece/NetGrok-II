@@ -43,9 +43,7 @@ var options = {
         },
     },
     interaction: {
-        hover: true,
-		zoomView: false,
-		dragView: false,
+        hover: true,	
 	},
     physics: {
         enabled: true,
@@ -135,15 +133,37 @@ socket.on('debug', function(msg) {
 
 network.on('hoverNode', function(properties) {
 	var hoveredNodes = nodes.get(properties.node);
-	var info = document.getElementById('info').innerHTML = 
-			JSON.stringify(hoveredNodes);
+	var table = "<table>" +
+			"<tr>" +
+				"<th>Host</th>" +
+				"<th>Protocol</th>" +
+				"<th>Source IP</th>" +
+				"<th>Source Port</th>" +
+				"<th>Destination IP</th>" +
+				"<th>Destination Port</th>" +
+				"<th>Time Start</th>" +
+				"<th>Time End</th>" +
+				"<th>Download</th>" +
+				"<th>Upload</th>" +
+			"</tr>" + 
+			"<tr>" +
+				"<td>" + hoveredNodes.label + "</td>" +
+				"<td>" + hoveredNodes.protocol + "</td>" +
+			   	"<td>" + hoveredNodes.src_ip + "</td>" +
+				"<td>" + hoveredNodes.src_port + "</td>" +
+				"<td>" + hoveredNodes.dst_ip + "</td>" +
+				"<td>" + hoveredNodes.dst_port + "</td>" +	
+				"<td>" + hoveredNodes.time_start + "</td>" +
+				"<td>" + hoveredNodes.time_end + "</td>" +
+				"<td>" + hoveredNodes.download + "</td>" +
+				"<td>" + hoveredNodes.upload + "</td>" +
+			"</tr>" +
+			"</table>"
+
+	var info = document.getElementById('info').innerHTML = table;
 });
 
 network.on('blurNode', function(properties) {
 	var hoveredNodes = nodes.get(properties.node);
 	document.getElementById('info').innerHTML = '';
-});
-
-network.on('stabilized', function(properties) {
-	network.fit();
 });
