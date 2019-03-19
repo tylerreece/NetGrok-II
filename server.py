@@ -11,6 +11,7 @@ import zmq
 import json
 import sqlite3
 from multiprocessing import Process, Lock
+from pony.orm import *
 
 # Setup ZMQ and Flask
 context = zmq.Context()
@@ -27,7 +28,23 @@ sio = SocketIO(app, async_mode='threading')
 HOST_MASK = '0.0.0.0'
 APP_PORT = 5000
 ZMQ_SUBSCRIPTION_PORT = '7188'
+
+# Database information
 DATABASE = 'database/netgrok.db'
+db = Database()
+class Entry(db.Entity):
+    host = Required(str)
+    protocol = Required(str)
+    src_ip = Required(str)
+    src_port = Required(str)
+    dst_ip = Required(str)
+    dst_port = Required(str)
+    time_start = Required(str)
+    time_end = Required(str)
+    download = Required(str)
+    upload = Required(str)
+db.bind(provider='sqlite', filename=DATABASE, create_db=True)
+db.generate_mapping(create_tables=True)
 mutex = Lock()
 
 # Bookkeeping for connections
@@ -85,55 +102,47 @@ def parse_json(json_string):
         # TODO: add in secondary connection handling
         pass
 
+@sio.on('flush db')
+@db_session
+def flush_database():
+    delete(e for e in Entry)
+    primary_connections_seen.clear()
+    sio.emit('database flushed')
+
 @sio.on('send whole graph')
+@db_session
 def send_whole_graph(userAgent):
-    with mutex:
-        conn = create_connection(DATABASE)
-        info = query_database(conn)
+        entries = select(e for e in Entry)
+        #query_database()
         msg = ''
-        for row in info:
+        for e in entries:
+            print(e.host)
             entry = dict()
-            entry['src_ip'] = row[1]
-            entry['src_port'] = row[2]
-            entry['dst_ip'] = row[3]
-            entry['dst_port'] = row[4]
-            entry['time_start'] = row[5]
-            entry['time_end'] = row[6]
-            entry['download'] = row[7]
-            entry['upload'] = row[8]
-            entry['protocol'] = row[9]
-            entry['host'] = row[10]
+            entry['src_ip'] = e.src_ip
+            entry['src_port'] = e.src_port
+            entry['dst_ip'] = e.dst_ip
+            entry['dst_port'] = e.dst_port
+            entry['time_start'] = e.time_start
+            entry['time_end'] = e.time_end
+            entry['download'] = e.download
+            entry['upload'] = e.upload
+            entry['protocol'] = e.protocol
+            entry['host'] = e.host
             msg += str(entry)
         sio.emit('whole graph', msg)
 
-def create_connection(db_file):
-    try:
-        conn = sqlite3.connect(db_file)
-        return conn
-    except Error as e:
-        print(e)
-    return None
+@db_session
+def create_entry(entry):
+    Entry(src_ip=entry[0], src_port=entry[1], dst_ip=entry[2],
+        dst_port=entry[3], time_start=entry[4], time_end=entry[5],
+        download=entry[6], upload=entry[7], protocol=entry[8],
+        host=entry[9])
 
-def create_entry(conn, entry):
-    sql = ''' INSERT INTO NETGROK(ID, SRC_IP, SRC_PORT, DST_IP,
-        DST_PORT, TIME_START, TIME_END, DOWNLOAD, UPLOAD, PROTOCOL,
-        HOST) VALUES(?,?,?,?,?,?,?,?,?,?,?)'''
-    cur = conn.cursor()
-    cur.execute(sql, entry)
-    return cur.lastrowid
-
-def query_database(conn):
-    sql = ''' SELECT * FROM NETGROK'''
-    cur = conn.cursor()
-    cur.execute(sql)
-    return cur.fetchall()
-
-def remove_duplicates(conn):
-    sql = '''DELETE FROM NETGROK
-	WHERE ID NOT IN (SELECT MAX(ID) FROM NETGROK
-	GROUP BY host); '''
-    cur = conn.cursor()
-    cur.execute(sql)
+@db_session
+def query_database():
+    query = select(e for e in Entry)
+    for entry in query[:]:
+        print(entry.host + '\n')
 
 def listen():
     subscriber = context.socket(zmq.SUB)
@@ -154,16 +163,14 @@ def listen():
         if type(msg) is str and json_obj is not None:
 
             with mutex:  # Lock during modications to db
-                conn = create_connection(DATABASE)
-                with conn:
-                    entry = (None, json_obj['src_ip'], json_obj['src_port'],
-                             json_obj['dst_ip'], json_obj['dst_port'],
-                             json_obj['time_start'], json_obj['time_end'],
-                             json_obj['download'], json_obj['upload'],
-                             json_obj['protocol'], json_obj['host'])
-                    create_entry(conn, entry)
-                    remove_duplicates(conn)
-                    sio.emit('new node', msg, broadcast=True)
+                entry = (json_obj['src_ip'], json_obj['src_port'],
+                         json_obj['dst_ip'], json_obj['dst_port'],
+                         json_obj['time_start'], json_obj['time_end'],
+                         json_obj['download'], json_obj['upload'],
+                         json_obj['protocol'], json_obj['host'])
+                create_entry(entry)
+                query_database()
+                sio.emit('new node', msg, broadcast=True)
 
 # Setup and start thread
 thread = threading.Thread(target=listen)

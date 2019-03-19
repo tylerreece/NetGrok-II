@@ -107,6 +107,17 @@ function addNodes(json_strings) {
 /* Connect to socket */
 var socket = io.connect('http://' + document.domain + ':' + location.port);
 
+/* Call this on flush db button click */
+function sendFlushDbMessage() {
+	socket.emit('flush db');
+}
+
+/* On database flushed message */
+socket.on('database flushed', function() {
+	location.reload();
+	var nodesSeen = new Set();
+});
+
 /* On connect message to console */
 socket.on('connect', function() {
     socket.emit('send whole graph', {
