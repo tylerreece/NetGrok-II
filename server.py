@@ -4,12 +4,10 @@
 # United States Military Academy
 
 # Import necessary modules
+import time
 from flask_socketio import SocketIO
-import threading
+import threading, zmq, json, sqlite3, sched, time, datetime
 from flask import Flask, render_template
-import zmq
-import json
-import sqlite3
 from multiprocessing import Process, Lock
 from pony.orm import *
 
@@ -28,6 +26,9 @@ sio = SocketIO(app, async_mode='threading')
 HOST_MASK = '0.0.0.0'
 APP_PORT = 5000
 ZMQ_SUBSCRIPTION_PORT = '7188'
+AGE_OFF_WINDOW = 5.0
+AGE_OFF_BYTES = 1000
+USE_AGE_OFF = False
 
 # Database information
 DATABASE = 'database/netgrok.db'
@@ -47,11 +48,30 @@ db.bind(provider='sqlite', filename=DATABASE, create_db=True)
 db.generate_mapping(create_tables=True)
 mutex = Lock()
 
-# Bookkeeping for connections
-primary_connections_seen = set()
+class RepeatedTimer(object):
+    def __init__(self, interval, function, *args, **kwargs):
+        self._timer     = None
+        self.interval   = interval
+        self.function   = function
+        self.args       = args
+        self.kwargs     = kwargs
+        self.is_running = False
+        self.start()
 
-# Debug flag
-debug = False
+    def _run(self):
+        self.is_running = False
+        self.start()
+        self.function(*self.args, **self.kwargs)
+
+    def start(self):
+        if not self.is_running:
+            self._timer = threading.Timer(self.interval, self._run)
+            self._timer.start()
+            self.is_running = True
+
+    def stop(self):
+        self._timer.cancel()
+        self.is_running = False
 
 # Server routing logic 
 
@@ -83,30 +103,16 @@ def about():
 # Helper Functions
 
 def parse_json(json_string):
-    # Clean up json_string
     json_string = json_string.strip('{}\x00')
-    # Format json_string correctly for json.loads()
     json_string = '[{' + json_string + '}]'
     json_obj = json.loads(json_string)
-    # Primary connections
     if 'host' in json_obj[0]:
-        host = json_obj[0]['host']
-        host = host.split('www.')[-1]
-        global primary_connections_seen
-        if host not in primary_connections_seen:
-            primary_connections_seen.add(host)
-            print(str(primary_connections_seen))
-            return json_obj[0]
-    # Secondary connections
-    else:
-        # TODO: add in secondary connection handling
-        pass
+        return json_obj[0]
 
 @sio.on('flush db')
 @db_session
 def flush_database():
     delete(e for e in Entry)
-    primary_connections_seen.clear()
     sio.emit('database flushed')
 
 @sio.on('send whole graph')
@@ -116,7 +122,6 @@ def send_whole_graph(userAgent):
         #query_database()
         msg = ''
         for e in entries:
-            print(e.host)
             entry = dict()
             entry['src_ip'] = e.src_ip
             entry['src_port'] = e.src_port
@@ -139,10 +144,50 @@ def create_entry(entry):
         host=entry[9])
 
 @db_session
+def update_entry(entry):
+    query = select(e for e in Entry if e.host == entry[9]).for_update()
+    for e in query:
+        e.time_end = entry[5]
+        e.download = str(int(e.download) + int(entry[6]))
+        e.upload = str(int(e.upload) + int(entry[7]))
+
+@db_session
 def query_database():
     query = select(e for e in Entry)
     for entry in query[:]:
         print(entry.host + '\n')
+
+@db_session
+def exists_in_db(host):
+    query = select(e for e in Entry if e.host == host)
+    if query:
+        return True
+    else:
+        return False
+
+@sio.on('age off')
+@db_session
+def delete_entry(msg):
+    host = msg['host']
+    query = select(e for e in Entry if e.host == host).for_update()
+    for e in query:
+        e.delete()
+
+@db_session
+def age_off():
+    time_now = datetime.datetime.now()
+    age_off_window = time_now - datetime.timedelta(seconds=AGE_OFF_WINDOW)
+    state = select(e for e in Entry)
+    connection_times = []
+    rows_to_age_off = []
+    for e in state:
+        datetime_obj = datetime.datetime.strptime(e.time_end,
+            "%Y-%m-%d %H:%M:%S")
+        connection_times.append((e.id, e.host, datetime_obj))
+    for (ID, host, date) in connection_times:
+        if date < age_off_window:
+            query = select(e for e in Entry if e.host == host).for_update()
+            sio.emit('reduce node', [host, AGE_OFF_BYTES])
 
 def listen():
     subscriber = context.socket(zmq.SUB)
@@ -150,26 +195,20 @@ def listen():
     subscriber.setsockopt(zmq.SUBSCRIBE, b'')
     while True:
         received_message = subscriber.recv().decode("utf-8")
-
-        if (debug):
-            sio.emit('debug', received_message, broadcast=True)
-
         json_obj = parse_json(received_message)
         msg = json.dumps(json_obj)
-
-        # The only reason this type check is here is because the else 
-        # statement is not yet filled out in parse_json to handle 
-        # secondary connections
         if type(msg) is str and json_obj is not None:
-
-            with mutex:  # Lock during modications to db
-                entry = (json_obj['src_ip'], json_obj['src_port'],
-                         json_obj['dst_ip'], json_obj['dst_port'],
-                         json_obj['time_start'], json_obj['time_end'],
-                         json_obj['download'], json_obj['upload'],
-                         json_obj['protocol'], json_obj['host'])
+            newHost = json_obj['host'].split('www.')[-1]
+            entry = (json_obj['src_ip'], json_obj['src_port'],
+                json_obj['dst_ip'], json_obj['dst_port'],
+                json_obj['time_start'], json_obj['time_end'],
+                json_obj['download'], json_obj['upload'],
+                json_obj['protocol'], newHost)
+            if exists_in_db(newHost):
+                update_entry(entry)
+                sio.emit('update node', msg, broadcast=True)
+            else:
                 create_entry(entry)
-                query_database()
                 sio.emit('new node', msg, broadcast=True)
 
 # Setup and start thread
@@ -178,4 +217,6 @@ thread.start()
 
 # Run server with debug mode enabled
 if __name__ == '__main__':
+    if USE_AGE_OFF:
+        rt = RepeatedTimer(AGE_OFF_WINDOW, age_off)
     sio.run(app, host=HOST_MASK, port=APP_PORT, debug=True)

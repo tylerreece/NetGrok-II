@@ -1,5 +1,3 @@
-var itemsSeen = new Set();
-
 var container = document.getElementById('timeline');
 
 var options = {
@@ -21,26 +19,24 @@ var timeline = new vis.Timeline(container, items, options);
 function addItem(json_string) {
     var json_obj = JSON.parse(json_string);
     var url = json_obj.host;
-    if(!itemsSeen.has(url)) {
-		itemsSeen.add(url);
-		var cont = document.createElement('div');
-    	var favicon = document.createElement('img');
-    	favicon.src = 'https://' + url + '/favicon.ico';
-    	favicon.onerror="this.src='https://i.dlpng.com/static/png/6818_preview.png';";
-		favicon.style.width = '35px';
-    	favicon.style.height = '35px';
-    	cont.appendChild(favicon);
-    	cont.appendChild(document.createElement('br'));
-    	var boldText = document.createElement('b');
-    	boldText.innerHTML = url;
-    	cont.appendChild(boldText);
-    	time = json_obj['time_start'];
-    	var request = {
-        	content: cont,
-        	start: time
-    	};
-    	items.add(request);
-	}
+	var cont = document.createElement('div');
+    var favicon = document.createElement('img');
+    favicon.src = 'https://' + url + '/favicon.ico';
+    favicon.onerror="this.src='https://i.dlpng.com/static/png/6818_preview.png';";
+	favicon.style.width = '35px';
+    favicon.style.height = '35px';
+    cont.appendChild(favicon);
+    cont.appendChild(document.createElement('br'));
+    var boldText = document.createElement('b');
+    boldText.innerHTML = url;
+    cont.appendChild(boldText);
+    time = json_obj['time_start'];
+    var request = {
+		name: url, 
+		content: cont,
+       	start: time
+    };
+	items.add(request);
 }
 
 function addItems(json_strings) {
@@ -60,9 +56,27 @@ socket.on('connect', function() {
     });
 });
 
+/* On receipt of whole graph */
 socket.on('whole graph', function(msg) {
     addItems(msg);
 });
+
+/* On receipt of age off */
+socket.on('age off', function(msg) {
+	var item = items.get({
+	filter: function (item) {
+		return (item.name == msg);
+	}
+});
+	items.remove(item);
+
+});
+
+/* On database flushed message */
+socket.on('database flushed', function() {
+	location.reload();
+});
+
 
 /* Handle creation of new node */
 socket.on('new node', function(msg) {

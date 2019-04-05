@@ -23,10 +23,8 @@ function getCoordinates(host) {
 	return [x,y];
 }
 
-var nodesSeen = new Set();
-
 /* VisJS setup */
-var nodes = new vis.DataSet([]);
+var nodes = new vis.DataSet();
 var edges = new vis.DataSet();
 
 var container = document.getElementById('visualization');
@@ -70,33 +68,53 @@ network.moveTo({
 /* Network Functions */
 function addNode(json_string) {
     var json_obj = JSON.parse(json_string);
-	if(!nodesSeen.has(json_obj.host)) {
-    	nodesSeen.add(json_obj.host);
-		var x = getCoordinates(json_obj.host)[0];
-		var y = getCoordinates(json_obj.host)[1];
-		nodes.add({
-        	label: '<b>' + json_obj.host + '</b>',
-			src_ip: json_obj.src_ip,
-			src_port: json_obj.src_port,
-			dst_ip: json_obj.dst_ip,
-			dst_port: json_obj.dst_port,
-			time_start: json_obj.time_start,
+	var x = getCoordinates(json_obj.host)[0];
+	var y = getCoordinates(json_obj.host)[1];
+	nodes.add({
+		name: json_obj.host, 
+		label: '<b>' + json_obj.host + '</b>',
+		src_ip: json_obj.src_ip,
+		src_port: json_obj.src_port,
+		dst_ip: json_obj.dst_ip,
+		dst_port: json_obj.dst_port,
+		time_start: json_obj.time_start,
+		time_end: json_obj.time_end,
+		download: json_obj.download,
+		upload: json_obj.upload,
+		protocol: json_obj.protocol,
+       	image: 'https://' + json_obj.host + '/favicon.ico',
+       	shape: 'image',
+		x: x,
+		y: y,
+//		size: (Number(json_obj.upload) + Number(json_obj.download))/20
+    });
+	console.log((Number(json_obj.upload) + Number(json_obj.download))/20)	
+	network.fit();
+}
+
+function updateNode(json_string) {
+	var json_obj = JSON.parse(json_string);
+	var node = nodes.get({
+		filter: function (item) {
+			return (item.name == json_obj.host);
+		}
+	});
+	if(node.length != 0) {
+		var n = node[0];
+		var uploadNum = Number(n.upload) + Number(json_obj.upload)
+		var downloadNum = Number(n.download) + Number(json_obj.download)
+		nodes.update({id: n.id,
+			upload: String(uploadNum),
+			download: String(downloadNum),
 			time_end: json_obj.time_end,
-			download: json_obj.download,
-			upload: json_obj.upload,
-			protocol: json_obj.protocol,
-        	image: 'https://' + json_obj.host + '/favicon.ico',
-        	shape: 'image',
-			x: x,
-			y: y,
-    	});
+//			size: (uploadNum + downloadNum)/20
+			size: 40
+		});
 	}
-    network.fit();
 }
 
 function addNodes(json_strings) {
     var j_strings = json_strings.split('}');
-    //console.log(j_strings);
     for (var i = 0; i < j_strings.length - 1; i++) {
         var newString = (j_strings[i] + '}').split("'").join('"');
         addNode(newString);
@@ -115,7 +133,6 @@ function sendFlushDbMessage() {
 /* On database flushed message */
 socket.on('database flushed', function() {
 	location.reload();
-	var nodesSeen = new Set();
 });
 
 /* On connect message to console */
@@ -130,14 +147,38 @@ socket.on('whole graph', function(msg) {
 	addNodes(msg);
 });
 
+/* On receipt of reduce node */
+socket.on('reduce node', function(msg) {
+	var host = msg[0];
+	var AGE_OFF_BYTES = msg[1];
+	var node = nodes.get({
+		filter: function(item) {
+			return (item.name == host);
+		}
+	});
+	if(node.length != 0) {
+		var n = node[0];
+		var newSize = ((n.size*20)-AGE_OFF_BYTES)/20;
+		if(newSize > 0) {
+			nodes.update({id: n.id, size: newSize});	
+		}
+		else {
+			nodes.remove(n);
+			socket.emit('age off', {
+				host: host
+			});
+		}
+	}
+});
+
 /* Handle creation of new node */
 socket.on('new node', function(msg) {
     addNode(msg);
 });
 
-/* Print information to console for debuging */
-socket.on('debug', function(msg) {
-    console.log(msg);
+/* Handle update of new node */
+socket.on('update node', function(msg) {
+	updateNode(msg);
 });
 
 /* User Events */
