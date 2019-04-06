@@ -4,7 +4,7 @@ NetGrok is a tool for understanding network traffic from the point-of-view of
 the local network. It uses [SSLsplit] to monitor connections made to and from
 local hosts, and then outputs information about the connections, such as
 addresses, time, and size. 
-
+ 
 [SSLsplit]: https://www.roe.ch/SSLsplit
 [OpenWRT]: https://openwrt.org/
 [Original NetGrok project]: https://github.com/codydunne/netgrok
