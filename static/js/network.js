@@ -39,12 +39,19 @@ var options = {
         font: {
             multi: 'html',
         },
+        scaling: {
+        	max: 500,
+        	min: 10,
+        }
+    },
+    edges: {
+    	length: 0,
     },
     interaction: {
         hover: true,	
 	},
     physics: {
-        enabled: true,
+        enabled: false,
         stabilization: true,
         barnesHut: {
             gravitationalConstant: -1000,
@@ -61,9 +68,12 @@ var options = {
 var network = new vis.Network(container, data, options);
 
 network.moveTo({
-	position: {x: 500, y:500},
-	offset: {x: 500, y:  500},
+	position: {x: 500, y: 500},
+	offset: {x: 500, y: 500},
 });
+
+var nodeToId = {};
+var curId = 0;
 
 /* Network Functions */
 function addNode(json_string) {
@@ -71,8 +81,9 @@ function addNode(json_string) {
 	var x = getCoordinates(json_obj.host)[0];
 	var y = getCoordinates(json_obj.host)[1];
 	nodes.add({
+		id: curId,
 		name: json_obj.host, 
-		label: '<b>' + json_obj.host + '</b>',
+		//label: '<b>' + json_obj.host + '</b>',
 		src_ip: json_obj.src_ip,
 		src_port: json_obj.src_port,
 		dst_ip: json_obj.dst_ip,
@@ -82,12 +93,39 @@ function addNode(json_string) {
 		download: json_obj.download,
 		upload: json_obj.upload,
 		protocol: json_obj.protocol,
-       	image: 'https://' + json_obj.host + '/favicon.ico',
-       	shape: 'image',
+		shape: 'circle',
 		x: x,
 		y: y,
-//		size: (Number(json_obj.upload) + Number(json_obj.download))/20
+		value: 1
+		//value: 1000, //(Number(json_obj.upload) + Number(json_obj.download))/20,
+		//size: 1000//(Number(json_obj.upload) + Number(json_obj.download))/20
     });
+    curId += 1;
+    nodes.add({
+    	id: curId,
+    	numConnections: 1,
+    	label: "1",
+    	x: x + 25,
+    	y: y + 25,
+    });
+    curId += 1;
+    nodes.add({
+    	id: curId,
+    	image: 'https://' + json_obj.host + '/favicon.ico',
+    	shape: 'image',
+    	x: x,
+    	y: y,
+    	size: 10,
+    });
+    curId += 1;
+    edges.add({
+    	from: curId-3,
+    	to: curId-2
+    });
+    edges.add({
+    	from: curId-3,
+    	to: curId-1
+    })
 	console.log((Number(json_obj.upload) + Number(json_obj.download))/20)	
 	network.fit();
 }
@@ -103,13 +141,25 @@ function updateNode(json_string) {
 		var n = node[0];
 		var uploadNum = Number(n.upload) + Number(json_obj.upload)
 		var downloadNum = Number(n.download) + Number(json_obj.download)
-		nodes.update({id: n.id,
+		nodes.update({
+			id: n.id,
 			upload: String(uploadNum),
 			download: String(downloadNum),
 			time_end: json_obj.time_end,
-//			size: (uploadNum + downloadNum)/20
-			size: 40
+			value: 10,
+//			size: 40
 		});
+		console.log(uploadNum + downloadNum);
+		var numConnectionsNode = nodes.get({id: n.id + 1});
+		console.log(numConnectionsNode);
+		var numConnectionsMade = numConnectionsNode[1].numConnections + 1;
+		var numConnectionsNodeId = n.id + 1;
+		console.log(numConnectionsMade);
+		nodes.update({
+			id: numConnectionsNodeId,
+			numConnections: numConnectionsMade,
+			label: String(numConnectionsMade)
+		})
 	}
 }
 
