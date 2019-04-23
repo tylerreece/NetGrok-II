@@ -1,0 +1,159 @@
+Dear AY20 NetGrok III Team,
+
+Greetings from the NetGrok II team! Congratulations on reaching your Firstie Year.
+As you begin your project, we have some general tips for XE401/402 as well as some
+specific instructions and words of wisdom for the NetGrok capstone itself.
+
+General Tips for XE401/402:
+
+1. Start your sprint review videos early! Film and create slides as you go, rather
+than at the end. Sometimes things stop working, or you find you cannot replicate
+the results of a test you did at the beginning of the sprint.
+
+2. Do a daily scrum at the beginning and end of each lesson. This ensures that your
+group is on the same page with the tasks that need to be completed for the day, 
+and at the end of the lesson that you hold each other accountable for what was 
+supposed to be finished and have a game plan for what you need to do between lessons.
+
+3. Take some time to understand how the point system and grading works in XE classes.
+Showing the work that you did is as important (if not more important in terms of 
+grades) as actually completing the work. Sprint reviews are important, but PDRs/
+CDRs/FDRs are worth even more points.
+
+4. Start thinking about how you want to present your material during Project's
+Day early! Even first semester, it is important to think about the general idea
+for how you want to present the material. Will you have two monitors, one TV, etc?
+What posters do you need to have? How will you balance live demo and recorded material?
+
+5. Sometimes there will be roadblocks in the course of development. Make sure to
+document your work consistently, so that you know what is going on and can refer
+back to notes easily. Try to create shared understanding within your team so that
+you all have the same level of knowledge when solving problems. Don't be afraid to
+ask for help when you need it!
+
+Specific Tips and Further Documentation of the GitHub Repo:
+
+I will try to go file by file and explain what is happening on each line. Remember
+to read the general READMe as well. 
+
+Certificates
+
+netgrok.crt and netgrok.key are both certificates necessary to run SSLSplit. 
+These can be generated on a Linux machine using the commands specified in the
+READMe.
+
+Database
+
+netgrok.db is an SQLite database. SQLite was chosen because it is a small, 
+lightweight database system that had all the functionality we needed. It is
+a relational database, which was what we felt most comfortable with. We interacted
+with the database using PonyORM (more on that later).
+
+sslsplit
+
+Most of the stuff in this folder was made by LT Tran (from NetGrok I). It has both
+the normal SSLSplit material, as well as his own additions which are present in
+netgrok.c. If you want to see each JSON message as it comes through SSLSplit,
+you can uncomment the printf statement on line 112 of netgrok.c. When setting
+up NetGrok to run, you will utilize the Makefile in this directory to compile
+the necessary files.
+
+Static
+
+  Images
+    These are all the images we used. the ones with numbers are our logos in 
+    different sizes. There are also pictures of us, our instructors, and advisor
+    that probably aren't of interest to you. We used computer.png to represent
+    a computer node and undefined.png to represent a host if we couldn't find
+    the favicon.
+  
+  JS
+    network.js
+      This is most of the JavaScript logic for the main visualization page. 
+      Lines 1-10 is the hashCode function that we used to hash the hostname
+      (google.com) of a website into a value, which was used to place it in 
+      a consistent place on the page every time. 
+      
+      Lines 12-24 is the mathematical logic for placing a host on the visualization.
+      As you can see, it hashes the host name, and does some modular arithmetic
+      to determine the x-y coordinates of the host.
+      
+      Lines 27-61 set up the network. Refer to the VisJS documentation for more
+      information. We set some options that make interfacing with the network
+      visualization easier. 
+      
+      Lines 68-93 show the addNode function. This takes a JSON in a string format,
+      parses it into its component parts, and adds it to the nodes DataSet. The
+      network.fit() call resizes the network so everything looks good.
+      
+      Lines 95-114 are similar to the addNode function, but in this case they update
+      a node. This changes the size and properties to reflect a new visit.
+      
+      Lines 116-123 are the addNodes function. This essentially just calls the addNode
+      function multiple times to add many nodes at once.
+      
+      Line 126 connects with the SocketIO socket.
+      
+      Lines 129-184 are the message handling. When a message (such as 'new node') comes
+      through SocketIO from the server, the function addNode is executed.
+      
+      Lines 186-221 are the event handling portions. Upon hover, a small table showing
+      additional details on demand is displayed underneath the visualization. If you have 
+      extra time, convert this to JQuery as it will be much easier to deal with the table.
+    
+    table.js
+    
+      This is very similar to network.js so I won't go over every line again. Essentially,
+      the main differences are that instead of addNode functions, there are addRow or addRows
+      functions to add to the table. Otherwise, all the message passing is the same (just slightly
+      different logic to deal with a table instead of a network).
+      
+    timeline.js
+      
+       Again, this is very similar. However, instead of the network module of VisJS, this uses
+       the timeline module. The setup is very similar, with options, and items instead of nodes.
+       Event handling is all the same through SocketIO.
+       
+    vis.js 
+    
+      This is not something that we wrote - it is the necessary JavaScript that allows the VisJS 
+      library to run correctly.
+      
+  Styles
+      
+    main.css
+      
+     This is our main CSS file. Pretty standard, it just provides a little extra color for buttons, etc.
+     The other files in this directory are necessary for the VisJS network and timeline.
+     
+  Templates
+  
+    The files in this directory are fairly straightforward - all HTML. They each have divs which are interacted
+    with using the JavaScript files in static/js. 
+    
+  Makefile
+  
+    We made this towards the end of the semester, and briefly tested it. You should add to this later,
+    and create additional functionality so that you can avoid having to set it up every time.
+    
+    
+
+
+Make sure you read the ReadMe as well. Good luck, and you can always reach out to us with any questions!
+
+Sincerely,
+
+    The NetGrok II Team
+    
+    Tyler Reece (360) 951-8722 tylerreece2019@gmail.com
+    Dan Young (330) 553-4122
+    Josh Balba (281) 202-7018
+    Matt Kim (415) 960-4530
+    
+      
+      
+      
+    
+
+
+
